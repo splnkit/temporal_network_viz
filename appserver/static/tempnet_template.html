@@ -1,0 +1,980 @@
+<head>
+  <link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+  <style>
+    svgdiv {
+      display: block;
+      height: 925px;
+    }
+
+	.button {
+      display: inline-block;
+      padding: 5px 15px;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      width: 75px;
+      outline: none;
+      color: #fff;
+      background-color: #8bb9d6;
+      border: none;
+      border-radius: 5px;
+      box-shadow: 0 4px #999;
+    }
+
+    button:hover {background-color: #6a8da3}
+
+    .button:active {
+      background-color: #6a8da3;
+      box-shadow: 0 3px #666;
+      transform: translateY(2px);
+    }
+
+    .controls {
+      flex-basis: 200px;
+      padding: 0 5px;
+    }
+
+    .controls .force {
+      background-color:#eee;
+      border-radius: 3px;
+      padding: 5px;
+      margin: 5px 0;
+	  font-size: 12px;
+    }
+
+    .controls .force p label { margin-right: .5em; font-size: 120%; font-weight: bold;}
+    .controls .force p { margin-top: 0;}
+    .controls .force label { display: inline-block; }
+    .controls input[type="checkbox"] { transform: scale(1.2, 1.2); width: 35px;}
+    .controls input[type="range"] { margin: 0 5% 0.5em 5%; width: 90%; }
+
+    * {
+      box-sizing: border-box;
+	  width: 100%;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    /* Style the header */
+    header {
+      background-color: #666;
+      padding: 4px;
+      text-align: center;
+      font-size: 14px;
+      color: white;
+    }
+
+    section {
+      width: 100%;
+      background: #ccc;
+    }
+
+    /* Create two columns/boxes that floats next to each other */
+    nav {
+      float: left;
+      width: 20%;
+      padding: 25px;
+      height: 100%
+    }
+
+	.nav_style {
+      padding: 25px;
+	  height: 100%
+	}
+
+    viz {
+      float: left;
+      padding-top: 25px;
+      padding-left: 25px;
+      padding-right: 25px;
+      width: 80%;
+      background-color: #f1f1f1;
+    }
+
+    /* Clear floats after the columns */
+    section:after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+    /* Style the footer */
+    footer {
+      background-color: #777;
+      padding: 2px;
+      text-align: center;
+      color: white;
+    }
+
+    text.active {
+      text-anchor: middle;
+      font-size: 5px;
+      font-family: Arial, Helvetica, sans-serif;
+      fill: black;
+      opacity: 1.0;
+    }
+
+    text.hidden {
+      opacity: 0.0;
+    }
+
+	line.active {
+      stroke: #f00;
+      stroke-opacity: 1.0;
+      stroke-width: 1.0;
+      stroke-dasharray: 3, 3;
+    }
+
+	line.tlinks {
+      stroke-opacity: 1.0;
+      stroke-width: 1.0;
+    }
+
+	line.hidden {
+      stroke: rgb(255, 255, 255);
+      stroke-opacity: 0.0;
+      stroke-width: 0.0;
+    }
+
+	circle.active {
+      fill: #f00;
+      fill-opacity: 1.0;
+      stroke: #999;
+      stroke-width: 1.5;
+    }
+
+	circle.tnodes {
+      fill: #808080;
+      fill-opacity: 1.0;
+      stroke: #fff;
+      stroke-width: 1.0;
+    }
+
+	circle.hidden {
+      fill-opacity: 0.0;
+      stroke-opacity: 0.0;
+      stroke-width: 0.0;
+    }
+
+    #time-range p {
+      font-family:"Arial", sans-serif;
+      font-size:12px;
+      color:black;
+    }
+
+	.ui-slider-horizontal {
+      height: 8px;
+      background: #D7D7D7;
+      border: 1px solid #BABABA;
+      box-shadow: 0 1px 0 #FFF, 0 1px 0 #CFCFCF inset;
+      clear: both;
+      margin: 8px 0;
+      -webkit-border-radius: 6px;
+      -moz-border-radius: 6px;
+      -ms-border-radius: 6px;
+      -o-border-radius: 6px;
+      border-radius: 6px;
+    }
+
+    .ui-slider {
+      position: relative;
+      text-align: left;
+    }
+
+	.ui-slider-horizontal .ui-slider-range {
+      top: -1px;
+      height: 100%;
+    }
+
+	.ui-slider .ui-slider-range {
+      position: absolute;
+      z-index: 1;
+      height: 8px;
+      font-size: .7em;
+      display: block;
+      border: 1px solid #2d74a8;
+      box-shadow: 0 1px 0 #AAD6F6 inset;
+      -moz-border-radius: 6px;
+      -webkit-border-radius: 6px;
+      -khtml-border-radius: 6px;
+      border-radius: 6px;
+      background: #81B8F3;
+      background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgi…pZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JhZCkiIC8+PC9zdmc+IA==');
+      background-size: 100%;
+      background-image: -webkit-gradient(linear, 50% 0, 50% 100%, color-stop(0%, #A0D4F5), color-stop(100%, #81B8F3));
+      background-image: -webkit-linear-gradient(top, #A0D4F5, #81B8F3);
+      background-image: -moz-linear-gradient(top, #A0D4F5, #81B8F3);
+      background-image: -o-linear-gradient(top, #A0D4F5, #81B8F3);
+      background-image: linear-gradient(top, #A0D4F5, #81B8F3);
+    }
+
+	.ui-slider .ui-slider-handle {
+      border-radius: 50%;
+      background: #F9FBFA;
+      background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgi…pZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JhZCkiIC8+PC9zdmc+IA==');
+      background-size: 100%;
+      background-image: -webkit-gradient(linear, 50% 0, 50% 100%, color-stop(0%, #C7CED6), color-stop(100%, #F9FBFA));
+      background-image: -webkit-linear-gradient(top, #C7CED6, #F9FBFA);
+      background-image: -moz-linear-gradient(top, #C7CED6, #F9FBFA);
+      background-image: -o-linear-gradient(top, #C7CED6, #F9FBFA);
+      background-image: linear-gradient(top, #C7CED6, #F9FBFA);
+      width: 22px;
+      height: 22px;
+      -webkit-box-shadow: 0 2px 3px -1px rgba(0, 0, 0, 0.6), 0 -1px 0 1px rgba(0, 0, 0, 0.15) inset, 0 1px 0 1px rgba(255, 255, 255, 0.9) inset;
+      -moz-box-shadow: 0 2px 3px -1px rgba(0, 0, 0, 0.6), 0 -1px 0 1px rgba(0, 0, 0, 0.15) inset, 0 1px 0 1px rgba(255, 255, 255, 0.9) inset;
+      box-shadow: 0 2px 3px -1px rgba(0, 0, 0, 0.6), 0 -1px 0 1px rgba(0, 0, 0, 0.15) inset, 0 1px 0 1px rgba(255, 255, 255, 0.9) inset;
+      -webkit-transition: box-shadow .3s;
+      -moz-transition: box-shadow .3s;
+      -o-transition: box-shadow .3s;
+      transition: box-shadow .3s;
+    }
+
+	.ui-slider .ui-slider-handle {
+      position: absolute;
+      z-index: 2;
+      width: 22px;
+      height: 22px;
+      cursor: default;
+      border: none;
+      cursor: pointer;
+    }
+
+	.ui-slider .ui-slider-handle:after {
+      content:"";
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      top: 50%;
+      margin-top: -4px;
+      left: 50%;
+      margin-left: -4px;
+      background: #30A2D2;
+      -webkit-box-shadow: 0 1px 1px 1px rgba(22, 73, 163, 0.7) inset, 0 1px 0 0 #FFF;
+      -moz-box-shadow: 0 1px 1px 1px rgba(22, 73, 163, 0.7) inset, 0 1px 0 0 white;
+      box-shadow: 0 1px 1px 1px rgba(22, 73, 163, 0.7) inset, 0 1px 0 0 #FFF;
+    }
+
+	.ui-slider-horizontal .ui-slider-handle {
+      top: -.5em;
+      margin-left: -.6em;
+    }
+
+    .ui-slider a:focus {
+      outline:none;
+    }
+
+    #slider-range-labels {
+      display:block;
+    }
+
+    .input {
+      text-align: left;
+      float:left;
+      margin-left:4px;
+	  width:75px;
+    }
+
+    .label {
+      text-align: left;
+      display:block;
+      font-size:12px;
+      width:160px;
+      float:left;
+      clear:left;
+    }
+
+	.border {
+      border:2px solid black;
+      height: 900px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h2>Force Directed Graph - Time Series Alarm Analysis</h2>
+  </header>
+
+  <section>
+    <nav>
+      <div style="text-align: center;padding-bottom: 15px;">
+        <text id="update"></text>
+      </div>
+      <div class="controls">
+        <div class="force">
+          <p><label>controls</label> Sets visualization controls</p>
+          <label title="The number of events set to active (red) for each time step">
+            events
+            <output id="nEvPerFrame">25</output>
+            <input type="range" min="0" max="200" value="25" step="1" oninput="  d3.select('#nEvPerFrame').text(value); restartAnimation();">
+          </label>
+          <label title="The time in milliseconds to hold before the transition to the next time step">
+            holdtime
+            <output id="nMsPerFrame">1500</output>
+            <input type="range" min="100" max="5000" value="1500" step="100" oninput="d3.select('#nMsPerFrame').text(value); restartAnimation();">
+          </label>
+          <label title="The number of events in the future to include in correlataion relative to the events currently active">
+            lookahead
+            <output id="nLookAhead">1000</output>
+            <input type="range" min="10" max="2000" value="1000" step="10" oninput="d3.select('#nLookAhead').text(value); restartAnimation();">
+          </label>
+          <label title="The number of events in the past to include in correlataion relative to the events currently active">
+            lookbehind
+            <output id="nLookBehind">3000</output>
+            <input type="range" min="10" max="5000" value="3000" step="10" oninput="d3.select('#nLookBehind').text(value); restartAnimation();">
+          </label>
+        </div>
+
+        <div class="force">
+          <p><label><input type="checkbox" onchange="forceProperties.forceX.enabled = this.checked; updateAll();"> forceX</label> Acts like gravity. Pulls all points towards an X location.</p>
+          <label>
+            strength
+            <output id="forceX_StrengthSliderOutput">.1</output>
+            <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceX_StrengthSliderOutput').text(value); forceProperties.forceX.strength=value; updateAll();">
+          </label>
+          <label title="The X location that the force will push the nodes to (NOTE: This demo multiplies by the svg width)">
+            x
+            <output id="forceX_XSliderOutput">.5</output>
+            <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceX_XSliderOutput').text(value); forceProperties.forceX.x=value; updateAll();">
+          </label>
+        </div>
+
+        <div class="force">
+          <p><label><input type="checkbox" onchange="forceProperties.forceY.enabled = this.checked; updateAll();"> forceY</label> Acts like gravity. Pulls all points towards a Y location.</p>
+          <label>
+            strength
+            <output id="forceY_StrengthSliderOutput">.1</output>
+            <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceY_StrengthSliderOutput').text(value); forceProperties.forceY.strength=value; updateAll();">
+          </label>
+          <label title="The Y location that the force will push the nodes to (NOTE: This demo multiplies by the svg height)">
+            y
+            <output id="forceY_YSliderOutput">.5</output>
+            <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceY_YSliderOutput').text(value); forceProperties.forceY.y=value; updateAll();">
+          </label>
+        </div>
+
+        <div class="force">
+          <p><label><input type="checkbox" checked onchange="forceProperties.link.enabled = this.checked; updateAll();"> link</label> Sets link length</p>
+          <label title="The force will push/pull nodes to make links this long">
+            distance
+            <output id="link_DistanceSliderOutput">60</output>
+            <input type="range" min="0" max="200" value="60" step="1" oninput="d3.select('#link_DistanceSliderOutput').text(value); forceProperties.link.distance=value; updateAll();">
+          </label>
+          <label title="Higher values increase rigidity of the links (WARNING: high values are computationally expensive)">
+            iterations
+            <output id="link_IterationsSliderOutput">2</output>
+            <input type="range" min="1" max="10" value="1" step="1" oninput="d3.select('#link_IterationsSliderOutput').text(value); forceProperties.link.iterations=value; updateAll();">
+          </label>
+        </div>
+
+        <div class="force">
+          <p><label><input type="checkbox" checked onchange="forceProperties.charge.enabled = this.checked; updateAll();"> charge</label> Attracts (+) or repels (-) nodes to/from each other.</p>
+          <label title="Negative strength repels nodes. Positive strength attracts nodes.">
+            strength
+            <output id="charge_StrengthSliderOutput">-80</output>
+            <input type="range" min="-200" max="50" value="-80" step="1" oninput="d3.select('#charge_StrengthSliderOutput').text(value); forceProperties.charge.strength=value; updateAll();">
+          </label>
+          <label title="Minimum distance where force is applied">
+            distanceMin
+            <output id="charge_distanceMinSliderOutput">1</output>
+            <input type="range" min="0" max="50" value="1" step="1" oninput="d3.select('#charge_distanceMinSliderOutput').text(value); forceProperties.charge.distanceMin=value; updateAll();">
+          </label>
+          <label title="Maximum distance where force is applied">
+            distanceMax
+            <output id="charge_distanceMaxSliderOutput">500</output>
+            <input type="range" min="0" max="2000" value="500" step="10" oninput="d3.select('#charge_distanceMaxSliderOutput').text(value); forceProperties.charge.distanceMax=value; updateAll();">
+          </label>
+        </div>
+
+        <div class="force">
+          <p><label><input type="checkbox" checked onchange="forceProperties.collide.enabled = this.checked; updateAll();"> collide</label> Prevents nodes from overlapping</p>
+          <label>
+            strength
+            <output id="collide_StrengthSliderOutput">2</output>
+            <input type="range" min="0" max="5" value="2" step=".1" oninput="d3.select('#collide_StrengthSliderOutput').text(value); forceProperties.collide.strength=value; updateAll();">
+          </label>
+          <label title="Size of nodes">
+            radius
+            <output id="collide_radiusSliderOutput">4</output>
+            <input type="range" min="0" max="20" value="4" step="1" oninput="d3.select('#collide_radiusSliderOutput').text(value); forceProperties.collide.radius=value; updateAll();">
+          </label>
+          <label title="Higher values increase rigidity of the nodes (WARNING: high values are computationally expensive)">
+            iterations
+            <output id="collide_iterationsSliderOutput">2</output>
+            <input type="range" min="1" max="10" value="2" step="1" oninput="d3.select('#collide_iterationsSliderOutput').text(value); forceProperties.collide.iterations=value; updateAll();">
+          </label>
+        </div>
+      </div>
+    </nav>
+
+    <viz>
+      <div>
+        <button type="button" class="button" id='pause_btn'>Pause</button>
+        <button type="button" class="button" id='restart_btn'>Restart</button>
+      </div>
+      <div id="time-range" >
+        <p>Time Range:<br>From: <span class="slider-time"></span> - To:   <span class="slider-time2"></span></p>
+        <div style="padding-left: 20px; padding-right: 20px;">
+          <div class="sliders_step1">
+            <div id="slider-range"></div>
+		  </div>
+          <svg id="slider-range-labels"></svg>
+        </div>
+      </div>
+      <div style="margin-top: 25px;">
+        <text id="timestep" style="padding: 1px;"></text>
+      </div >
+      <svgdiv>
+        <hr class="hr">
+
+		<svg id="network_graph" width="960" height="875" class="border">
+        </svg>
+
+        <script charset="utf-8" src="https://d3js.org/d3.v4.min.js"></script>
+        <script type='text/javascript' src='//code.jquery.com/jquery-2.0.2.js'></script>
+        <script type="text/javascript" src="//code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+        <script charset="utf-8">
+
+// Load via requireJS if available (jupyter notebook environment)
+try {
+  // Problem: require.config will raise an exception when called for the second time
+  require.config({
+    paths: {
+      //d3: "https://d3js.org/d3.v4.min"
+      d3: "https://d3js.org/d3.v4.min.js".replace(".js", "")
+    }
+  });
+
+  console.log("Detected requireJS");
+}
+
+catch(err) {
+  // a reference error indicates that requireJS does not exist.
+  // other errors may occur due to multiple calls to config
+  if (err instanceof ReferenceError) {
+    console.log("Detected no requireJS");
+
+    // Helper function that waits for d3js to be loaded
+    require = function require(symbols, callback) {
+      var ms = 5;
+      window.setTimeout(function(t) {
+        if (window[symbols[0]])
+          callback(window[symbols[0]]);
+        else
+          window.setTimeout(arguments.callee, ms);
+      }, ms);
+    }
+  }
+}
+
+d3.selection.prototype.moveToFront = function() {
+  return this.each(function(){
+    this.parentNode.appendChild(this);
+  });
+};
+
+d3.selection.prototype.moveToBack = function() {
+  return this.each(function() {
+    var firstChild = this.parentNode.firstChild;
+    if (firstChild) {
+      this.parentNode.insertBefore(this, firstChild);
+    }
+  });
+};
+
+// values for all forces
+forceProperties = {
+  center: {
+    x: 0.5,
+    y: 0.5
+  },
+  forceX: {
+      enabled: false,
+      strength: .1,
+      x: .5
+  },
+  forceY: {
+      enabled: false,
+      strength: .1,
+      y: .5
+  },
+  link: {
+    enabled: true,
+    distance: 60,
+    iterations: 2
+  },
+  charge: {
+    enabled: true,
+    strength: -80,
+    distanceMin: 1,
+    distanceMax: 500
+  },
+  collide: {
+    enabled: true,
+    strength: 2,
+    iterations: 2,
+    radius: 4
+  },
+}
+
+var run_status = true;
+var width = +d3.select('svgdiv').style('width').slice(0, -2)
+var height = +d3.select('svgdiv').style('height').slice(0, -2)
+
+var radius = 4.0;
+var color = d3.scaleOrdinal(d3.schemeCategory10);
+var temporal_net = $network_data;
+
+var hidden_link_strength = 0;
+var active_link_strength = 0.9;
+
+// create a dictionary with edges indexed by timestamps
+var edgesbytime = {};
+var time_stamps = temporal_net.links.map(link => link['time']);
+time_stamps.forEach(function(t) {
+  edgesbytime[t] = [];
+});
+
+var mintime = d3.min(time_stamps);
+var maxtime = d3.max(time_stamps);
+
+var format = d3.timeFormat("%Y/%m/%d %H:%M:%S");
+var dt_from = format(new Date(mintime * 1000));
+var dt_to = format(new Date(maxtime * 1000));
+d3.select('#update').html('Animation has Started');
+
+jQuery('.slider-time').html(dt_from);
+jQuery('.slider-time2').html(dt_to);
+
+var min_val = Date.parse(dt_from)/1000;
+var max_val = Date.parse(dt_to)/1000;
+
+function zeroPad(num, places) {
+  var zero = places - num.toString().length + 1;
+  return Array(+(zero > 0 && zero)).join("0") + num;
+}
+
+function formatDT(__dt) {
+  var year = __dt.getFullYear();
+  var month = zeroPad(__dt.getMonth()+1, 2);
+  var date = zeroPad(__dt.getDate(), 2);
+  var hours = zeroPad(__dt.getHours(), 2);
+  var minutes = zeroPad(__dt.getMinutes(), 2);
+  var seconds = zeroPad(__dt.getSeconds(), 2);
+  return year + '-' + month + '-' + date + ' ' + hours + ':' + minutes + ':' + seconds;
+};
+
+jQuery("#slider-range").slider({
+  range: true,
+  min: min_val,
+  max: max_val,
+  step: 10,
+  values: [min_val, max_val],
+  slide: function (e, ui) {
+    var dt_cur_from = new Date(ui.values[0]*1000);
+    jQuery('.slider-time').html(formatDT(dt_cur_from));
+
+    var dt_cur_to = new Date(ui.values[1]*1000);
+    jQuery('.slider-time2').html(formatDT(dt_cur_to));
+
+    mintime = ui.values[0];
+    maxtime = ui.values[1];
+
+    restartAnimation()
+  }
+});
+
+var formatTime = d3.timeFormat("%Y-%m-%dT%H:%M:%S.%L%Z");
+
+data = [];
+for (var i = 0; i < time_stamps.length; i++) {
+  data.push(new Date(formatTime(time_stamps[i] * 1000)));
+}
+
+xScale = d3.scaleTime().domain(d3.extent(data))
+  .range([0, width])
+  .nice();
+
+var xAxis = d3.axisBottom(xScale);
+var svg_slider_label = d3.select("#slider-range-labels")
+  .attr('width', width)
+  .attr('height', 20);
+
+svg_slider_label.append("g")
+  .call(xAxis)
+  .style("text-anchor", "start");
+
+var svg = d3.select("#network_graph")
+  .attr('width', width)
+  .attr('height', height);
+
+// extract static links
+var links = [];
+var links_by_id = {};
+temporal_net.links.forEach(function(link) {
+  id = String(link.source + '-' + link.target);
+  edgesbytime[link.time].push(id);
+  l = {
+    'source': link.source,
+    'target': link.target,
+    'id': id,
+    'strength': 0.0,
+    'group': link.group
+  };
+
+  if (!contains(links, l)) {
+    links.push(l);
+    links_by_id[l.id] = l;
+  }
+});
+
+// build the arrow.
+svg.append("svg:defs").selectAll("marker")
+  .data(["end"])      // Different link/path types can be defined here
+  .enter().append("svg:marker")    // This section adds in the arrows
+  .attr("id", String)
+  .attr("viewBox", "0 -5 10 10")
+  .attr("refX", 22)
+  .attr("refY", 0)
+  .attr("markerWidth", 4)
+  .attr("markerHeight", 4)
+  .attr("orient", "auto")
+  .append("svg:path")
+  .attr("d", "M0,-5L10,0L0,5");
+
+var g = svg.append("g");
+
+var link = g.append("g")
+  .attr("class", "tlinks")
+  .selectAll("line")
+  .data(links, function(d){return d.id;})
+  .enter().append("line")
+  .attr('stroke-opacity', 0.5)
+  .attr("stroke", function(d) { return color(d.group); })
+  .attr("id", function(d) { return d.id; })
+  .attr("marker-end", "url(#end)");
+
+var node_g = g.append("g")
+  .attr("class", "tnodes")
+  .selectAll("circle")
+  .data(temporal_net.nodes, function(d){return d.id;})
+  .enter()
+  .append("g");
+
+var node = node_g.append("circle")
+  .attr('id', function(d) { return d.id; })
+  .attr("r", radius)
+  .attr("class", "tnodes")
+  .call(d3.drag()
+  .on("start", dragstarted)
+  .on("drag", dragged)
+  .on("end", dragended));
+
+node.append("title").text(function(d) { return d.id; });
+
+var text = node_g.append("text")
+  .attr("x", [0, -8][0])
+  .attr("y", [0, -8][1])
+  .attr("id", function(d) {return d.id; })
+  .text(function(d) { return d.id.replace(/(__.*)/, ''); })
+  .attr("class", "active");
+
+var zoom_handler = d3.zoom()
+  .on("zoom", zoom_actions);
+
+zoom_handler(svg);
+
+// build mapping to DOM objects once for performance reasons
+var time_step = d3.select('#timestep');
+var edges_to_dom = {};
+var nodes_to_dom = {};
+
+links.forEach(function(link) {
+  edges_to_dom[link.id] = d3.select('svg #'+link.id);
+});
+
+temporal_net.nodes.forEach(function(n) {
+  nodes_to_dom[n.id] = d3.select('svg #'+n.id);
+});
+
+// attach event handlers
+d3.select('#pause_btn').on("click", pauseAnimation);
+d3.select('#restart_btn').on("click", restartAnimation);
+
+// start animation
+var time = mintime;
+
+var intervl = setInterval(time_step_function, parseInt(document.getElementById("nMsPerFrame").value, 10));
+d3.select('#update').html('Animation has Started');
+console.log('Started animation.')
+
+var simulation = d3.forceSimulation();
+
+initializeSimulation();
+
+// set up the simulation and event to update locations after each tick
+function initializeSimulation() {
+  simulation.nodes(temporal_net.nodes);
+  initializeForces();
+  simulation.on("tick", ticked);
+}
+
+// apply new force properties
+function updateForces() {
+  // get each force by name and update the properties
+  simulation.force("center")
+    .x(width * forceProperties.center.x)
+    .y(height * forceProperties.center.y);
+  simulation.force("forceX")
+      .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
+      .x(width * forceProperties.forceX.x);
+  simulation.force("forceY")
+      .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
+      .y(height * forceProperties.forceY.y);
+  simulation.force("charge")
+    .strength(forceProperties.charge.strength * forceProperties.charge.enabled)
+    .distanceMin(forceProperties.charge.distanceMin)
+    .distanceMax(forceProperties.charge.distanceMax);
+  simulation.force("collide")
+    .strength(forceProperties.collide.strength * forceProperties.collide.enabled)
+    .radius(forceProperties.collide.radius)
+    .iterations(forceProperties.collide.iterations);
+  simulation.force("link")
+    .id(function(d) {return d.id;})
+    .distance(forceProperties.link.distance)
+    .iterations(forceProperties.link.iterations)
+    .links(forceProperties.link.enabled ? links : []);
+
+  // updates ignored until this is run
+  // restarts the simulation (important if simulation has already slowed down)
+  simulation.alpha(1).restart();
+}
+
+// add forces to the simulation
+function initializeForces() {
+  // add forces and associate each with a name
+  simulation
+    .force("forceX", d3.forceX())
+    .force("forceY", d3.forceY())
+    .force("link", d3.forceLink())
+    .force("center", d3.forceCenter())
+    .force("charge", d3.forceManyBody())
+    .force("collide", d3.forceCollide());
+
+  // apply properties to each of the forces
+  updateForces();
+}
+
+// update the display based on the forces (but not positions)
+function updateDisplay() {
+  node
+    .attr("r", forceProperties.collide.radius)
+    .attr("stroke-width", forceProperties.charge.enabled==false ? 0 : Math.abs(forceProperties.charge.strength)/15);
+
+  link
+    .attr("stroke-width", forceProperties.link.enabled ? 1 : .5)
+    .attr("opacity", forceProperties.link.enabled ? 1 : 0);
+}
+
+// convenience function to update everything (run after UI input)
+function updateAll() {
+  updateForces();
+  updateDisplay();
+}
+
+// update the display positions after each simulation tick
+function ticked() {
+  link
+    .attr("x1", function(d) { return d.source.x; })
+    .attr("y1", function(d) { return d.source.y; })
+    .attr("x2", function(d) { return d.target.x; })
+    .attr("y2", function(d) { return d.target.y; });
+
+  text.attr("transform", transform);
+  text.attr("cx", function(d) { return d.x; })
+    .attr("cy", function(d) { return d.y; });
+
+  node
+    .attr("cx", function(d) { return d.x; })
+    .attr("cy", function(d) { return d.y; });
+}
+
+// animates one time step
+function time_step_function() {
+  var evPerFrame = parseInt(document.getElementById("nEvPerFrame").value, 10);
+  var format = d3.timeFormat("%Y/%m/%d %H:%M:%S");
+  var formatted_time_step_start = format(new Date(time * 1000))
+  var formatted_time_step_end = format(new Date((time + evPerFrame) * 1000))
+  time_step.html('Time Step: ' + formatted_time_step_start + " to " + formatted_time_step_end);
+
+  // pause animation
+  if(time > maxtime) {
+    run_status = false;
+    clearInterval(intervl);
+    d3.select('#update').html('Animation has Completed');
+    console.log('Animation has Completed')
+  }
+
+  // reset all links to hidden
+  for (id in edges_to_dom) {
+    try {
+      edges_to_dom[l.id].attr('class', 'links');
+      links_by_id[id].strength = hidden_link_strength;
+      // edges_to_dom[id].attr('class', 'hidden');
+    }
+    catch(err) {
+      console.log('Error: Could not find DOM object with id ' + id);
+    }
+  }
+
+  // reset all nodes to inactive
+  for (id in nodes_to_dom) {
+    try {
+      nodes_to_dom[id].attr("class", "tnodes");
+    }
+    catch(err) {
+      console.log('Error: Could not find DOM object with id ' + id);
+    }
+  }
+
+  var look_ahead = parseInt(document.getElementById("nLookAhead").value, 10);
+  var look_behind = parseInt(document.getElementById("nLookBehind").value, 10);
+
+  // change nodes and links in current time slice
+  for (ti=Math.max(mintime, time - look_behind); ti<=time + look_ahead; ti++) {
+    if (ti in edgesbytime) {
+      edgesbytime[ti].forEach(function(id) {
+        links_by_id[id].strength = active_link_strength;
+
+        // links that are currently active
+        time_update = time - parseInt(document.getElementById("nEvPerFrame").value, 10);
+        if (ti >= time_update+1 && ti <= time) {
+          node_ids = id.split('-');
+          try {
+            edges_to_dom[id].attr('class', 'active').moveToFront();
+          }
+          catch(err){
+            console.log('Error: Could not find DOM link with id ' + id);
+          }
+          try {
+            nodes_to_dom[node_ids[0]].attr('class', 'active').moveToFront();
+          }
+          catch(err){
+            console.log('Error: Could not find DOM node with id ' + node_ids[0]);
+          }
+          try {
+            nodes_to_dom[node_ids[1]].attr('class', 'active').moveToFront();
+          }
+          catch(err){
+            console.log('Error: Could not find DOM node with id ' + node_ids[1]);
+          }
+        }
+
+        // links in current time slice that are not active
+        else {
+          edges_to_dom[id].attr('class', 'tlinks');
+        }
+      });
+    }
+  }
+
+  text.moveToFront();
+  time += parseInt(document.getElementById("nEvPerFrame").value, 10);
+}
+
+function pauseAnimation() {
+  if (run_status) {
+    run_status = false;
+    clearInterval(intervl);
+    simulation.stop();
+    d3.select('#update').html('Animation has Paused');
+    d3.select('#pause_btn').html('Start');
+    console.log('Paused animation.')
+  } else {
+    intervl = setInterval(time_step_function, parseInt(document.getElementById("nMsPerFrame").value, 10));
+    run_status = true;
+    simulation.restart();
+    d3.select('#update').html('Animation has Resumed');
+    d3.select('#pause_btn').html('Pause');
+    console.log('Resumed animation.')
+  }
+}
+
+function zoom_actions(){
+  g.attr("transform", d3.event.transform)
+}
+
+  // Init nEvPerFrame
+  d3.select('#update').property('value', '25');
+
+  // Register event handler for changes to nEvPerFrame
+  d3.select("#nEvPerFrame").on("change", function() {
+    d3.select('#nEvPerFrame').property('value', this.value);
+    restartAnimation()
+  })
+
+function restartAnimation() {
+  if (run_status)
+    clearInterval(intervl);
+    time = mintime;
+
+    var evPerFrame = parseInt(document.getElementById("nEvPerFrame").value, 10);
+    var format = d3.timeFormat("%Y/%m/%d %H:%M:%S");
+    var formatted_time_step_start = format(new Date(time * 1000))
+    var formatted_time_step_end = format(new Date((time + evPerFrame) * 1000))
+
+	time_step.html('Time Step: ' + formatted_time_step_start + " to " + formatted_time_step_end);
+    d3.select('#pause_btn').html('Pause');
+    run_status = true;
+    intervl = setInterval(time_step_function, parseInt(document.getElementById("nMsPerFrame").value, 10));
+    d3.select('#update').html('Animation has been Restarted');
+    console.log('Restarted animation.')
+  }
+
+function transform(d) {
+  return "translate(" + d.x + "," + d.y + ")";
+}
+
+function dragstarted(d) {
+  if (!d3.event.active)
+    simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragged(d) {
+  d.fx = d3.event.x;
+  d.fy = d3.event.y;
+}
+
+function dragended(d) {
+  if (!d3.event.active)
+    simulation.alphaTarget(0.01);
+}
+
+function contains(array, obj) {
+  var i = array.length;
+  while (i--) {
+    if (array[i] === obj) {
+      return true;
+    }
+  }
+  return false;
+}
+
+        </script>
+      </svgdiv>
+    </viz>
+  </section>
+
+  <footer>
+    <p></p>
+  </footer>
+
+</body>
+
+
