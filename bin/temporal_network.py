@@ -60,7 +60,7 @@ class TemporalNetwork:
         # print("tedges: ", str(tedges))
 
         if tedges is not None:
-            Log.add('Building index data structures ...')
+            # Log.add('Building index data structures ...')
 
             for e in tedges:
                 # print("e[0]: ", str(e[0]))
@@ -77,13 +77,13 @@ class TemporalNetwork:
             self.tedges = tedges
             self.nodes = list(nodes_seen.keys())
 
-            Log.add('Sorting time stamps ...')
+            # Log.add('Sorting time stamps ...')
 
             self.ordered_times = sorted(list(self.time.keys()))
             for v in self.nodes:
                 self.activities[v] = sorted(self.activities_sets[v])
                 # print("Activities: ", str(self.activities[v])) 
-            Log.add('finished.')
+            # Log.add('finished.')
 
     @classmethod
     def read_file(cls, filename, separator=',', directed=True,
@@ -129,74 +129,74 @@ class TemporalNetwork:
         assert (filename != ''), 'Empty filename given'
 
         # Read header
-        with open(filename, 'r') as f:
-            tedges = []
+        f = filename
+        tedges = []
 
-            header = f.readline()
-            header = header.split(separator)
+        header = f.readline()
+        header = header.split(separator)
 
-            # If header columns are included, arbitrary column orders are supported
-            time_ix = -1
-            source_ix = -1
-            target_ix = -1
-            for i in range(len(header)):
-                header[i] = header[i].strip()
-                if header[i] == 'node1' or header[i] == 'source':
-                    source_ix = i
-                elif header[i] == 'node2' or header[i] == 'target':
-                    target_ix = i
-                elif header[i] == 'time' or header[i] == 'timestamp':
-                    time_ix = i            
+        # If header columns are included, arbitrary column orders are supported
+        time_ix = -1
+        source_ix = -1
+        target_ix = -1
+        for i in range(len(header)):
+            header[i] = header[i].strip()
+            if header[i] == 'node1' or header[i] == 'source':
+                source_ix = i
+            elif header[i] == 'node2' or header[i] == 'target':
+                target_ix = i
+            elif header[i] == 'time' or header[i] == 'timestamp':
+                time_ix = i
 
-            assert (source_ix >= 0 and target_ix >= 0), \
-                "Detected invalid header columns: %s" % header
+        assert (source_ix >= 0 and target_ix >= 0), \
+            "Detected invalid header columns: %s" % header
 
-            if time_ix < 0:  # pragma: no cover
-                Log.add('No time stamps found in data, assuming consecutive links',
-                        Severity.WARNING)
+        # if time_ix < 0:  # pragma: no cover
+            # Log.add('No time stamps found in data, assuming consecutive links',
+            #        Severity.WARNING)
 
-            if not directed:
-                Log.add('Reading undirected time-stamped links ...')
-            else:
-                Log.add('Reading directed time-stamped links ...')
+        # if not directed:
+        #     Log.add('Reading undirected time-stamped links ...')
+        # else:
+        #     Log.add('Reading directed time-stamped links ...')
 
-            line = f.readline()
-            n = 1
-            while line and n <= maxlines:
-                fields = line.rstrip().split(separator)
-                try:
-                    if time_ix >= 0:
-                        timestamp = fields[time_ix]
-                        # if the timestamp is a number, we use this
-                        if timestamp.isdigit():
-                            t = int(timestamp)
-                        else:
-                            # if it is a string, we use the timestamp format to convert
-                            # it to a UNIX timestamp
-                            x = datetime.datetime.strptime(timestamp, timestamp_format)
-                            t = int(mktime(x.timetuple()))
+        line = f.readline()
+        n = 1
+        while line and n <= maxlines:
+            fields = line.rstrip().split(separator)
+            try:
+                if time_ix >= 0:
+                    timestamp = fields[time_ix]
+                    # if the timestamp is a number, we use this
+                    if timestamp.isdigit():
+                        t = int(timestamp)
                     else:
-                        t = n
-                    if t >= 0 and fields[source_ix] != '' and fields[target_ix] != '':
-                        # add group so that we can use it for color
-                        group = fields[source_ix]
-                        tedge = (fields[source_ix], fields[target_ix], int(t/time_rescale), group)
-                        tedges.append(tedge)
-                        if not directed:
-                            tedges.append((fields[target_ix], fields[source_ix], int(t/time_rescale), group))
-                    else:  # pragma: no cover
-                        s_line = line.strip()
-                        if fields[source_ix] == '' or fields[target_ix] == '':
-                            msg = 'Empty node in line {0}: {1}'.format(n+1, s_line)
-                        else: 
-                            msg = 'Negative timestamp in line {0}: {1}'.format(n+1, s_line)
-                        Log.add(msg, Severity.WARNING)
-                except (IndexError, ValueError):  # pragma: no cover
+                        # if it is a string, we use the timestamp format to convert
+                        # it to a UNIX timestamp
+                        x = datetime.datetime.strptime(timestamp, timestamp_format)
+                        t = int(mktime(x.timetuple()))
+                else:
+                    t = n
+                if t >= 0 and fields[source_ix] != '' and fields[target_ix] != '':
+                    # add group so that we can use it for color
+                    group = fields[source_ix]
+                    tedge = (fields[source_ix], fields[target_ix], int(t/time_rescale), group)
+                    tedges.append(tedge)
+                    if not directed:
+                        tedges.append((fields[target_ix], fields[source_ix], int(t/time_rescale), group))
+                else:  # pragma: no cover
                     s_line = line.strip()
-                    msg = 'Malformed line {0}: {1}'.format(n+1, s_line)
-                    Log.add(msg, Severity.WARNING)
-                line = f.readline()
-                n += 1
+                    if fields[source_ix] == '' or fields[target_ix] == '':
+                        msg = 'Empty node in line {0}: {1}'.format(n+1, s_line)
+                    else: 
+                        msg = 'Negative timestamp in line {0}: {1}'.format(n+1, s_line)
+                    # Log.add(msg, Severity.WARNING)
+            except (IndexError, ValueError):  # pragma: no cover
+                s_line = line.strip()
+                msg = 'Malformed line {0}: {1}'.format(n+1, s_line)
+                # Log.add(msg, Severity.WARNING)
+            line = f.readline()
+            n += 1
         # end of with open()
 
         return cls(tedges=tedges)
@@ -216,7 +216,7 @@ class TemporalNetwork:
 
         """
         msg = 'Writing {0} time-stamped edges to file {1}'.format(self.ecount(), filename)
-        Log.add(msg, Severity.INFO)
+        # Log.add(msg, Severity.INFO)
         with open(filename, 'w+') as f:
             f.write('source' + separator + 'target' + separator + 'time' + '\n')
             for time in self.ordered_times:
@@ -260,7 +260,7 @@ class TemporalNetwork:
         -------
 
         """
-        Log.add('Starting filtering ...', Severity.INFO)
+        # Log.add('Starting filtering ...', Severity.INFO)
         new_t_edges = []
 
         for (v, w, t) in self.tedges:
@@ -269,7 +269,7 @@ class TemporalNetwork:
 
         n_filtered = self.ecount() - len(new_t_edges)
         msg = 'finished. Filtered out {} time-stamped edges.'.format(n_filtered)
-        Log.add(msg,  Severity.INFO)
+        # Log.add(msg,  Severity.INFO)
 
         return TemporalNetwork(tedges=new_t_edges)
 

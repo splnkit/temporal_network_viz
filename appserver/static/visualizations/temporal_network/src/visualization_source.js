@@ -6,7 +6,8 @@ define([
             'underscore',
             'api/SplunkVisualizationBase',
             'api/SplunkVisualizationUtils',
-            'd3'
+            'd3',
+            'jquery-ui-bundle',
             // Add required assets to this list
         ],
         function(
@@ -26,12 +27,153 @@ define([
               SplunkVisualizationBase.prototype.initialize.apply(this, arguments);
               this.$el = $(this.el);
 
-              this.$el.addClass('splunk-scatter-overlay');
+              this.$el.addClass('temp_net');
               if (isDarkTheme){
                 this.$el.addClass('dark');
               }
               
               // Initialization logic goes here
+              this.$el.append(`<header>
+    <h2>Force Directed Graph - Time Series Alarm Analysis</h2>
+  </header>
+  <section>
+    <nav>
+      <div style="text-align: center;padding-bottom: 15px;">
+        <text id="update"></text>
+      </div>
+      <div class="controls">
+        <div class="force">
+          <p><label>controls</label> Sets visualization controls</p>
+          <label title="The number of events set to active (red) for each time step">
+            events
+            <output id="nEvPerFrame">25</output>
+            <input id="nEvPerFrameInput" type="range" min="0" max="200" value="25" step="1">
+          </label>
+          <label title="The time in milliseconds to hold before the transition to the next time step">
+            holdtime
+            <output id="nMsPerFrame">1500</output>
+            <input id="nMsPerFrameInput" type="range" min="100" max="5000" value="1500" step="100">
+          </label>
+          <label title="The number of events in the future to include in correlataion relative to the events currently active">
+            lookahead
+            <output id="nLookAhead">1000</output>
+            <input id="nLookAheadInput" type="range" min="10" max="2000" value="1000" step="10">
+          </label>
+          <label title="The number of events in the past to include in correlataion relative to the events currently active">
+            lookbehind
+            <output id="nLookBehind">3000</output>
+            <input id="nLookBehindInput" type="range" min="10" max="5000" value="3000" step="10">
+          </label>
+        </div>
+
+        <div class="force">
+          <p><label><input id="forceXInput" type="checkbox"> forceX</label> Acts like gravity. Pulls all points towards an X location.</p>
+          <label>
+            strength
+            <output id="forceX_StrengthSliderOutput">.1</output>
+            <input id="forceX_StrengthSliderInput" type="range" min="0" max="1" value=".1" step="0.01">
+          </label>
+          <label title="The X location that the force will push the nodes to (NOTE: This demo multiplies by the svg width)">
+            x
+            <output id="forceX_XSliderOutput">.5</output>
+            <input id="forceX_XSliderInput" type="range" min="0" max="1" value=".5" step="0.01">
+          </label>
+        </div>
+
+        <div class="force">
+          <p><label><input id="forceYInput" type="checkbox"> forceY</label> Acts like gravity. Pulls all points towards a Y location.</p>
+          <label>
+            strength
+            <output id="forceY_StrengthSliderOutput">.1</output>
+            <input id="forceY_StrengthSliderInput" type="range" min="0" max="1" value=".1" step="0.01">
+          </label>
+          <label title="The Y location that the force will push the nodes to (NOTE: This demo multiplies by the svg height)">
+            y
+            <output id="forceY_YSliderOutput">.5</output>
+            <input id="forceY_YSliderInput" type="range" min="0" max="1" value=".5" step="0.01">
+          </label>
+        </div>
+
+        <div class="force">
+          <p><label><input id="linkInput" type="checkbox" checked> link</label> Sets link length</p>
+          <label title="The force will push/pull nodes to make links this long">
+            distance
+            <output id="link_DistanceSliderOutput">60</output>
+            <input id="link_DistanceSliderInput" type="range" min="0" max="200" value="60" step="1">
+          </label>
+          <label title="Higher values increase rigidity of the links (WARNING: high values are computationally expensive)">
+            iterations
+            <output id="link_IterationsSliderOutput">2</output>
+            <input id="link_IterationsSliderInput" type="range" min="1" max="10" value="1" step="1" >
+          </label>
+        </div>
+
+        <div class="force">
+          <p><label><input id="chargeInput" type="checkbox" checked> charge</label> Attracts (+) or repels (-) nodes to/from each other.</p>
+          <label title="Negative strength repels nodes. Positive strength attracts nodes.">
+            strength
+            <output id="charge_StrengthSliderOutput">-80</output>
+            <input id="charge_StrengthSliderInput" type="range" min="-200" max="50" value="-80" step="1">
+          </label>
+          <label title="Minimum distance where force is applied">
+            distanceMin
+            <output id="charge_distanceMinSliderOutput">1</output>
+            <input id="charge_distanceMinSliderInput" type="range" min="0" max="50" value="1" step="1">
+          </label>
+          <label title="Maximum distance where force is applied">
+            distanceMax
+            <output id="charge_distanceMaxSliderOutput">500</output>
+            <input id="charge_distanceMaxSliderInput" type="range" min="0" max="2000" value="500" step="10">
+          </label>
+        </div>
+
+        <div class="force">
+          <p><label><input id="collisionInput" type="checkbox" checked> collide</label> Prevents nodes from overlapping</p>
+          <label>
+            strength
+            <output id="collide_StrengthSliderOutput">2</output>
+            <input id="collide_StrengthSliderInput" type="range" min="0" max="5" value="2" step=".1">
+          </label>
+          <label title="Size of nodes">
+            radius
+            <output id="collide_radiusSliderOutput">4</output>
+            <input id="collide_radiusSliderInput" type="range" min="0" max="20" value="4" step="1">
+          </label>
+          <label title="Higher values increase rigidity of the nodes (WARNING: high values are computationally expensive)">
+            iterations
+            <output id="collide_iterationsSliderOutput">2</output>
+            <input id="collide_iterationsSliderInput" type="range" min="1" max="10" value="2" step="1">
+          </label>
+        </div>
+      </div>
+    </nav>
+
+    <div class="viz">
+      <div>
+        <button type="button" class="button" id='pause_btn'>Pause</button>
+        <button type="button" class="button" id='restart_btn'>Restart</button>
+      </div>
+      <div id="time-range" >
+        <p>Time Range:<br>From: <span class="slider-time"></span> - To:   <span class="slider-time2"></span></p>
+        <div style="padding-left: 20px; padding-right: 20px;">
+          <div class="sliders_step1">
+            <div id="slider-range"></div>
+          </div>
+          <svg id="slider-range-labels"></svg>
+        </div>
+      </div>
+      <div style="margin-top: 25px;">
+        <text id="timestep" style="padding: 1px;"></text>
+      </div >
+      <div id="svgdiv" class="svgdiv">
+        <hr class="hr">
+
+          <svg id="network_graph" width="960" height="875" class="border">                                                                                                                                 
+        </svg>
+      </div>
+    </div>
+  </section>`);
+
           },
 
           _getEscapedProperty: function(name, config) {
@@ -76,52 +218,35 @@ define([
 
               this._getConfigParams(config);
 
-              var dataMap = data.rows.reduce(function(map, nodeArr) {
+              var csvOutput = data.rows.reduce(function(output, nodeArr) {
 
-                  var point_time = nodeArr[0],
-                      latency   = nodeArr[1],
-                      trans_id  = nodeArr[2],
-                      status    = nodeArr[3],
-                      perc50    = nodeArr[4],
-                      perc90    = nodeArr[5],
-                      perc95    = nodeArr[6],
-                      perc99    = nodeArr[7];
+                  var data_row = Array();
 
-                  if (latency) {
-                    var point_object = {
-                        "date": point_time,
-                        "ptime": point_time,
-                        "latency": latency,
-                        "id": trans_id,
-                        "status": status
-                    }
-                    map.points.push(point_object);
-                  } else {
-                     var line_obj = {
-                      "date": point_time,
-                      "ptime": point_time,
-                      "perc50": Number(perc50),
-                      "perc90": Number(perc90),
-                      "perc95": Number(perc95),
-                      "perc99": Number(perc99)
-                     };
-                     map.lines.push(line_obj);
-                  }
-
-                  return map;
+                  data_row.push(nodeArr[0]);
+                  data_row.push(nodeArr[1]);
+                  data_row.push(nodeArr[2]);
+                  output.rows.push(data_row.join(","));
+                  return output;
               }, {
-                    "points": [],
-                    "lines": [],
+                    "rows": ["time,source,target"],
                 }
               );
-              return dataMap;
+
+              return csvOutput.rows.join("\n");
           },
-    
+
+
           // Implement updateView to render a visualization.
           //  'data' will be the data object returned from formatData or from the search
           //  'config' will be the configuration property object
           updateView: function(data, config) {
-            d3.selection.prototype.moveToFront = function() {
+            // console.log(data);
+            jQuery('#network_graph').empty();
+            jQuery('#slider-range').empty();
+            jQuery('#slider-range-labels').empty();
+
+            function drawIt(temp_network_json) {
+                          d3.selection.prototype.moveToFront = function() {
               return this.each(function(){
                 this.parentNode.appendChild(this);
               });
@@ -172,12 +297,14 @@ define([
             }
 
             var run_status = true;
-            var width = +d3.select('svgdiv').style('width').slice(0, -2)
-            var height = +d3.select('svgdiv').style('height').slice(0, -2)
-
+            var width = jQuery('#svgdiv').width();
+            console.log(width);
+            // var height = +d3.select('svgdiv').style('height').slice(0, -2)
+            var height = jQuery('#svgdiv').height();
+            console.log(height);
             var radius = 4.0;
             var color = d3.scaleOrdinal(d3.schemeCategory10);
-            var temporal_net = $network_data;
+            var temporal_net = temp_network_json;
 
             var hidden_link_strength = 0;
             var active_link_strength = 0.9;
@@ -218,7 +345,7 @@ define([
               return year + '-' + month + '-' + date + ' ' + hours + ':' + minutes + ':' + seconds;
             };
 
-            jQuery("#slider-range").slider({
+            $("#slider-range").slider({
               range: true,
               min: min_val,
               max: max_val,
@@ -237,6 +364,118 @@ define([
                 restartAnimation()
               }
             });
+            $("#nEvPerFrameInput").change(function() {
+              $('#nEvPerFrame').text($('#nEvPerFrameInput').val());
+              restartAnimation();
+            });
+            $("#nMsPerFrameInput").change(function() {
+              $('#nMsPerFrame').text($('#nMsPerFrameInput').val());
+              restartAnimation();
+            });            
+            $("#nLookAheadInput").change(function() {
+              $('#nLookAhead').text($('#nLookAheadInput').val());
+              restartAnimation();
+            });
+            $("#nLookBehindInput").change(function() {
+              $('#nLookBehind').text($('#nLookBehindInput').val());
+              restartAnimation();
+            });
+
+            $("#chargeInput").change(function() {
+              forceProperties.charge.enabled = $("#chargeInput").prop("checked"); 
+              updateAll();
+            });
+
+            $("#charge_StrengthSliderInput").change(function() {
+              $("#charge_StrengthSliderOutput").text($("#charge_StrengthSliderInput").val());
+              forceProperties.charge.strength = $("#charge_StrengthSliderInput").val(); 
+              updateAll();
+            });
+
+            $("#charge_distanceMinSliderInput").change(function() {
+              $("#charge_distanceMinSliderOutput").text($("#charge_distanceMinSliderInput").val());
+              forceProperties.charge.distanceMin = $("#charge_distanceMinSliderInput").val(); 
+              updateAll();
+            });
+
+            $("#charge_distanceMaxSliderInput").change(function() {
+              $("#charge_distanceMaxSliderOutput").text($("#charge_distanceMaxSliderInput").val());
+              forceProperties.charge.distanceMax = $("#charge_distanceMaxSliderInput").val(); 
+              updateAll();
+            });
+
+            $("#forceXInput").change(function() {
+              forceProperties.forceX.enabled = $("#forceXInput").prop("checked"); 
+              updateAll();
+            });
+
+            $("#forceX_StrengthSliderInput").change(function() {
+              $("#forceX_StrengthSliderOutput").text($("#forceX_StrengthSliderInput").val());
+              forceProperties.forceX.strength = $("#forceX_StrengthSliderInput").val(); 
+              updateAll();
+            });
+
+            $("#forceX_XSliderInput").change(function() {
+              $("#forceX_XSliderOutput").text($("#forceX_XSliderInput").val());
+              forceProperties.forceX.x = $("#forceX_XSliderInput").val(); 
+              updateAll();
+            });
+
+            $("#forceYInput").change(function() {
+              forceProperties.forceY.enabled = $("#forceYInput").prop("checked"); 
+              updateAll();
+            });
+
+            $("#forceY_StrengthSliderInput").change(function() {
+              $("#forceY_StrengthSliderOutput").text($("#forceY_StrengthSliderInput").val());
+              forceProperties.forceY.strength = $("#forceY_StrengthSliderInput").val(); 
+              updateAll();
+            });
+
+            $("#forceY_YSliderInput").change(function() {
+              $("#forceY_YSliderOutput").text($("#forceY_YSliderInput").val());
+              forceProperties.forceY.y = $("#forceY_YSliderInput").val(); 
+              updateAll();
+            });
+
+            $("#linkInput").change(function() {
+              forceProperties.link.enabled = $("#linkInput").prop("checked"); 
+              updateAll();
+            });
+
+            $("#link_DistanceSliderInput").change(function() {
+              $("#link_DistanceSliderOutput").text($("#link_DistanceSliderInput").val());
+              forceProperties.link.distance = $("#link_DistanceSliderInput").val(); 
+              updateAll();
+            });
+
+            $("#link_IterationsSliderInput").change(function() {
+              $("#link_IterationsSliderOutput").text($("#link_IterationsSliderInput").val());
+              forceProperties.link.iterations = $("#link_IterationsSliderInput").val(); 
+              updateAll();
+            });
+
+            $("#collisionInput").change(function() {
+              forceProperties.collide.enabled = $("#collisionInput").prop("checked"); 
+              updateAll();
+            });
+
+            $("#collide_StrengthSliderInput").change(function() {
+              $("#collide_StrengthSliderOutput").text($("#collide_StrengthSliderInput").val());
+              forceProperties.collide.strength = $("#collide_StrengthSliderInput").val(); 
+              updateAll();
+            });
+            $("#collide_radiusSliderInput").change(function() {
+              $("#collide_radiusSliderOutput").text($("#collide_radiusSliderInput").val());
+              forceProperties.collide.radius = $("#collide_radiusSliderInput").val(); 
+              updateAll();
+            });
+            $("#collide_iterationsSliderInput").change(function() {
+              $("#collide_iterationsSliderOutput").text($("#collide_iterationsSliderInput").val());
+              forceProperties.collide.iterations = $("#collide_iterationsSliderInput").val(); 
+              updateAll();
+            });
+
 
             var formatTime = d3.timeFormat("%Y-%m-%dT%H:%M:%S.%L%Z");
 
@@ -431,10 +670,10 @@ define([
             }
 
             // convenience function to update everything (run after UI input)
-            function updateAll() {
-              updateForces();
-              updateDisplay();
-            }
+            // function updateAll() {
+            //   updateForces();
+            //   updateDisplay();
+            // }
 
             // update the display positions after each simulation tick
             function ticked() {
@@ -455,7 +694,7 @@ define([
 
             // animates one time step
             function time_step_function() {
-              var evPerFrame = parseInt(document.getElementById("nEvPerFrame").value, 10);
+              var evPerFrame = parseInt(jQuery("#nEvPerFrame").val(), 10);
               var format = d3.timeFormat("%Y/%m/%d %H:%M:%S");
               var formatted_time_step_start = format(new Date(time * 1000))
               var formatted_time_step_end = format(new Date((time + evPerFrame) * 1000))
@@ -501,7 +740,7 @@ define([
                     links_by_id[id].strength = active_link_strength;
 
                     // links that are currently active
-                    time_update = time - parseInt(document.getElementById("nEvPerFrame").value, 10);
+                    time_update = time - parseInt(jQuery("#nEvPerFrame").val(), 10);
                     if (ti >= time_update+1 && ti <= time) {
                       node_ids = id.split('-');
                       try {
@@ -533,7 +772,7 @@ define([
               }
 
               text.moveToFront();
-              time += parseInt(document.getElementById("nEvPerFrame").value, 10);
+              time += parseInt(jQuery("#nEvPerFrame").val(), 10);
             }
 
             function pauseAnimation() {
@@ -572,7 +811,7 @@ define([
                 clearInterval(intervl);
                 time = mintime;
 
-                var evPerFrame = parseInt(document.getElementById("nEvPerFrame").value, 10);
+                var evPerFrame = parseInt(jQuery("#nEvPerFrame").val(), 10);
                 var format = d3.timeFormat("%Y/%m/%d %H:%M:%S");
                 var formatted_time_step_start = format(new Date(time * 1000))
                 var formatted_time_step_end = format(new Date((time + evPerFrame) * 1000))
@@ -584,6 +823,11 @@ define([
                 d3.select('#update').html('Animation has been Restarted');
                 console.log('Restarted animation.')
               }
+
+            function updateAll() {
+              updateForces();
+              updateDisplay();
+            }
 
             function transform(d) {
               return "translate(" + d.x + "," + d.y + ")";
@@ -615,6 +859,25 @@ define([
               }
               return false;
             }
+          };
+            
+          if (data.length > 0) {
+            $.ajax({
+              type: "POST",
+              url: "/en-US/splunkd/__raw/services/temporal_network",
+              data: {payload: data},
+              dataType: "json",
+              success: function(data) {
+                console.log(data);
+                drawIt(data);
+              },
+              fail: function(data) {
+                console.log("Poopy");
+              }
+            });
+          } else {
+            return
+          }
           },
 
           // Search data params
