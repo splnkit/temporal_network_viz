@@ -11,9 +11,6 @@ import exec_anaconda
 
 exec_anaconda.exec_anaconda_or_die()
 
-with open("/Users/gburgett/Downloads/tnsys.log", "w") as ofile:
-    ofile.write("%s\n" % sys.path)
-
 from io import StringIO
 
 
@@ -62,37 +59,7 @@ class RestHandler(PersistentServerConnectionApplication):
                           ]
             }
 
-            with open("/Users/gburgett/Downloads/tn.log", "w") as ofile:
-                ofile.write("%s\n" % in_string)
-
             return {"payload": "%s" % json.dumps(network_data), "status": 200}
         except Exception as e:
             # logger.debug(e)
             return {'payload': 'Internal REST handler error %s' % e, 'status': 500}
-
-        # method = request['method']
-
-        # if method == "POST":
-        #     try:
-        #         # request_payload = request.get("body", "")
-        #         # payload_file = StringIO(request_payload)
-        #         # tempnet = TemporalNetwork().read_file(request_payload, timestamp_format='%Y-%m-%d %H:%M:%S')
-
-        #         # network_data = {
-        #         #     'nodes': [{'id': fix_node_name(v),
-        #         #               'group': 1} for v in tempnet.nodes],
-        #         #     'links': [{'source': fix_node_name(s),
-        #         #                'target': fix_node_name(v),
-        #         #                'width': 1,
-        #         #                'time': t,
-        #         #                'group': fix_node_name(g)} for s, v, t, g in tempnet.tedges
-        #         #               ]
-        #         # }
-
-        #         return {"payload": in_string, "status": 200}
-
-        #     except Exception as e:
-        #         logger.debug(e)
-        #         return {'payload': 'Internal REST handler error', 'status': 500}
-        # else:
-        #     return {'payload': 'Unsupported method: %s' % method, 'status': 405}
